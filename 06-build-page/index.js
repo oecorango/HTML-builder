@@ -92,7 +92,7 @@ const stream = fs.createReadStream(dirReadHtmlFile, 'utf-8');
 
 stream.on('data', chunk => data += chunk);
 stream.on('end', () => {
-  const bundleHtml = fs.createWriteStream(dirCreatHtmlFile);
+  fs.createWriteStream(dirCreatHtmlFile);
   fs.readdir(dirComponentsHtml, (err, files) => {
     if (err) throw err;
     files.forEach(elem => {
