@@ -1,7 +1,3 @@
-// 2 часа до дедлайна, вроде все работает, но полностью протестить
-// не успеваю, голова уже квадратная с этим таском.
-// Если что не работает, пишите, попробую поправить.
-
 const fs = require('fs');
 const path = require('path');
 const EventEmitter = require('events');
@@ -84,35 +80,36 @@ function copyAssetsFiles(dir, copyDir) {
 }
 
 let data = '';
-let compnonts = [];
-const dirReadHtmlFile = path.join(__dirname, 'template.html');
+
 const dirCreatHtmlFile = path.join(dirBundleFolder, 'index.html');
 const dirComponentsHtml = path.join(__dirname, 'components');
+const dirReadHtmlFile = path.join(__dirname, 'template.html');
 const stream = fs.createReadStream(dirReadHtmlFile, 'utf-8');
-
 stream.on('data', chunk => data += chunk);
-stream.on('end', () => {
-  fs.createWriteStream(dirCreatHtmlFile);
-  fs.readdir(dirComponentsHtml, (err, files) => {
+stream.on('end', () => creareHtml());
+
+async function creareHtml() {
+  const components = await fs.promises.readdir(dirComponentsHtml, (err) => {
     if (err) throw err;
-    files.forEach(elem => {
-      compnonts.push(elem.split('.')[0]);
-    });
-    for (let i = 0; i < compnonts.length; i++) {
-      let res = '';
-      const filesDir = path.join(dirComponentsHtml, files[i]);
-      const readComponents = fs.createReadStream(filesDir, 'utf-8');
-      readComponents.on('data', chunk => res += chunk);
-      readComponents.on('end', () => {
-        if (data.includes(`{{${compnonts[i]}}}`)) {
-          const a = data.replace(`{{${compnonts[i]}}}`, `\n${res}\n`);
-          data = a;
-          fs.writeFile(dirCreatHtmlFile, data, (err) => {
-            if(err) throw err;
-          });
-        }
-      });
-    }
   });
-  console.log('файл index.html скомпилирован');
-});
+
+  components.forEach(elem => {
+    let res = '';
+    const name = elem.slice(0, -5);
+    const filesDir = path.join(dirComponentsHtml, elem);
+
+    const readComponents = fs.createReadStream(filesDir, 'utf-8');
+    readComponents.on('data', chunk => res += chunk);
+    readComponents.on('end', () => {
+      if (data.includes(`{{${name}}}`)) {
+        const replace = data.replace(`{{${name}}}`, `\n${res}\n`);
+        data = replace;
+      }
+    });
+    readComponents.on('end', () => {
+      fs.writeFile(dirCreatHtmlFile, data, (err) => {
+        if(err) throw err;
+      });
+    });
+  });
+}
