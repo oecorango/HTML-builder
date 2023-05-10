@@ -12,6 +12,7 @@ const dirFilesCss = path.join(__dirname, 'styles');
 const dirAssets = path.join(__dirname, 'assets');
 
 const eventEmitter = new EventEmitter();
+const eventEmitter1 = new EventEmitter();
 const output = fs.createWriteStream(dirBundleCss);
 
 // ----создаем папку сборки и вызываем функции сборки----
@@ -104,12 +105,17 @@ async function creareHtml() {
       if (data.includes(`{{${name}}}`)) {
         const replace = data.replace(`{{${name}}}`, `\n${res}\n`);
         data = replace;
+        eventEmitter1.emit('start');
+        eventEmitter1.on('start', () => {
+          writeHtml(dirCreatHtmlFile, data);
+        });
+
       }
     });
-    readComponents.on('end', () => {
-      fs.writeFile(dirCreatHtmlFile, data, (err) => {
-        if(err) throw err;
-      });
-    });
+  });
+}
+function writeHtml(dir, data) {
+  fs.writeFile(dir, data, (err) => {
+    if(err) throw err;
   });
 }
